@@ -48,7 +48,7 @@ namespace Solution
                 options.AddPolicy(name: MyAllowSpecificOrigins,
                                   builder =>
                                   {
-                                      builder.WithOrigins("*", "http://localhost:3000", "https://huy-aspnetcore.herokuapp.com/")
+                                      builder.WithOrigins("http://localhost:3000", "https://huy-aspnetcore.herokuapp.com")
                                       .AllowAnyHeader()
                                       .AllowAnyMethod()
                                       .AllowCredentials();
