@@ -173,9 +173,9 @@ namespace Solution.Application.Users
             bool check = false;
             foreach (var r in role)
             {
-                if (r == "Administrator")
+                if (r.Contains("Administrator"))
                 {
-                    check = true; break;
+                    check = true;break;
                 }
             }
             if (check == true) return new ApiSuccessResult<bool>();

@@ -92,7 +92,7 @@ namespace SolutionForBusiness.BackEndApi.Controllers
                 if (result.IsSuccessed) return Ok("Cập nhật thành Công");
             }
 
-            return BadRequest();
+            return BadRequest(userCheck.Message);
         }
 
         [HttpGet("getrole/{id}")]
