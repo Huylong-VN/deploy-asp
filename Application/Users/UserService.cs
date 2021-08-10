@@ -78,7 +78,7 @@ namespace Solution.Application.Users
             var query = _usermanage.Users;
             if (!string.IsNullOrEmpty(request.Keyword))
             {
-                query = query.Where(x => x.UserName.Contains(request.Keyword) || x.Email.Contains(request.Keyword) || x.FirstName.Contains(request.Keyword));
+                query = query.Where(x => x.UserName.Contains(request.Keyword) || x.Email.Contains(request.Keyword));
             }
 
             //Total row
@@ -93,7 +93,7 @@ namespace Solution.Application.Users
                 Email = x.Email,
                 PhoneNumber = x.PhoneNumber,
                 UserName = x.UserName
-            }).ToListAsync();
+            }).OrderBy(x => x.Id).ToListAsync();
 
             var pagedResult = new PagedResult<UserVM>()
             {
@@ -152,9 +152,9 @@ namespace Solution.Application.Users
             return new ApiSuccessResult<bool>();
         }
 
-        public async Task<ApiResult<bool>> Update(UpdateRequest request)
+        public async Task<ApiResult<Guid>> Update(UpdateRequest request)
         {
-            if (await _usermanage.Users.AnyAsync(x => x.Email == request.Email && x.Id != request.Id)) return new ApiErrorResult<bool>("Email đã tồn tại");
+            if (await _usermanage.Users.AnyAsync(x => x.Email == request.Email && x.Id != request.Id)) return new ApiErrorResult<Guid>("Email đã tồn tại");
             var user = await _usermanage.FindByIdAsync(request.Id.ToString());
             user.FirstName = request.FirstName;
             user.LastName = request.LastName;
@@ -162,8 +162,8 @@ namespace Solution.Application.Users
             user.Dob = request.Dob;
             user.PhoneNumber = request.Phone;
             var result = await _usermanage.UpdateAsync(user);
-            if (result.Succeeded) return new ApiSuccessResult<bool>();
-            return new ApiErrorResult<bool>("Update thất bại");
+            if (result.Succeeded) return new ApiSuccessResult<Guid>(request.Id);
+            return new ApiErrorResult<Guid>("Update thất bại");
         }
 
         public async Task<ApiResult<bool>> checkRoleUser(Guid userId)
@@ -175,7 +175,7 @@ namespace Solution.Application.Users
             {
                 if (r.Contains("Administrator"))
                 {
-                    check = true;break;
+                    check = true; break;
                 }
             }
             if (check == true) return new ApiSuccessResult<bool>();

@@ -68,9 +68,10 @@ namespace SolutionForBusiness.BackEndApi.Controllers
         [HttpPut("update")]
         public async Task<IActionResult> Update([FromBody] UpdateRequest request)
         {
+            if (!ModelState.IsValid) return BadRequest("Email phải đúng chuẩn !");
             var user = await _userService.Update(request);
-            if (user.IsSuccessed) return Ok(user.Message);
-            return BadRequest("cập nhật thất bại");
+            if (user.IsSuccessed) return Ok(user.ResultObj);
+            return BadRequest(user.Message);
         }
 
         [HttpPut("password")]

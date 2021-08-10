@@ -14,7 +14,7 @@ namespace Solution.Application.Users
 
         Task<PagedResult<UserVM>> GetUserPaging(GetUserPagingRequest request);
 
-        Task<ApiResult<bool>> Update(UpdateRequest request);
+        Task<ApiResult<Guid>> Update(UpdateRequest request);
 
         Task<ApiResult<bool>> UpdatePassword(UpdatePasswordRequest request);
 

@@ -78,7 +78,7 @@ namespace Solution.Application.Products
             //Total row
             int totalRow = await query.CountAsync();
 
-            var data = await query.Skip((request.PageIndex - 1) * request.PageSize).Take(request.PageSize).OrderBy(x => x.p.Id).Select(x => new ProductVM()
+            var data = await query.Skip((request.PageIndex - 1) * request.PageSize).Take(request.PageSize).Select(x => new ProductVM()
             {
                 Id = x.p.Id,
                 Name = x.p.Name,
@@ -87,7 +87,7 @@ namespace Solution.Application.Products
                 DateCreated = x.p.DateCreated,
                 Image = x.p.Image,
                 CategoryName = x.c.Name
-            }).ToListAsync();
+            }).OrderBy(x => x.Id).ToListAsync();
             var pagedResult = new PagedResult<ProductVM>()
             {
                 Items = data,
