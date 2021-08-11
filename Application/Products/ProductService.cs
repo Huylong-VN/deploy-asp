@@ -75,6 +75,7 @@ namespace Solution.Application.Products
                 query = query.Where(x => x.c.Id == request.categoryId);
             }
 
+
             //Total row
             int totalRow = await query.CountAsync();
 
@@ -86,7 +87,6 @@ namespace Solution.Application.Products
                 Price = x.p.Price,
                 DateCreated = x.p.DateCreated,
                 Image = x.p.Image,
-                CategoryName = x.c.Name
             }).OrderBy(x => x.Id).ToListAsync();
             var pagedResult = new PagedResult<ProductVM>()
             {
@@ -113,6 +113,8 @@ namespace Solution.Application.Products
         public async Task<ProductVM> GetById(int Id)
         {
             var product = await _context.Products.FindAsync(Id);
+            if (product == null) return null;
+            var category = await _context.Categories.Where(x => x.Id == product.CategoryId).Select(x => x.Name).ToListAsync();
             var productVM = new ProductVM()
             {
                 Name = product.Name,
@@ -120,8 +122,9 @@ namespace Solution.Application.Products
                 Description = product.Description,
                 DateCreated = product.DateCreated,
                 Image = product.Image,
-                CategoryName = product.Category.Name
+                Categories = category
             };
+
             return productVM;
         }
     }

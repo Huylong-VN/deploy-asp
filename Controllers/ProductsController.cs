@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Solution.Application.Category;
 using Solution.Application.Products;
 using Solution.Application.Users;
+using Solution.ViewModels.Categories;
+using Solution.ViewModels.Common;
 using Solution.ViewModels.Products;
 using System;
 using System.Threading.Tasks;
@@ -15,9 +18,11 @@ namespace SolutionForBusiness.BackEndApi.Controllers
     {
         private readonly IProductService _productService;
         public readonly IUserService _userService;
+        public readonly ICategoryService _categoryService;
 
-        public ProductsController(IProductService productService, IUserService userService)
+        public ProductsController(IProductService productService, IUserService userService, ICategoryService categoryService)
         {
+            _categoryService = categoryService;
             _userService = userService;
             _productService = productService;
         }
@@ -72,6 +77,27 @@ namespace SolutionForBusiness.BackEndApi.Controllers
                 if (result.IsSuccessed) return Ok(result);
             }
             return BadRequest();
+        }
+
+        [HttpGet("categoryassign/{id}")]
+        public async Task<IActionResult> CategoryAssignRequest(int id)
+        {
+            var productObj = await _productService.GetById(id);
+            if (productObj == null) return BadRequest("null");
+            var categoryObj = await _categoryService.GetAll();
+            var categoriesAssignRequest = new CategoryAssignRequest();
+
+            foreach (var category in categoryObj)
+            {
+                categoriesAssignRequest.Categories.Add(new SelectedItem()
+                {
+                    Id = category.Id.ToString(),
+                    Name = category.Name,
+                    Selected = productObj.Categories.Contains(category.Name)
+                });
+            }
+
+            return Ok(categoriesAssignRequest);
         }
     }
 }

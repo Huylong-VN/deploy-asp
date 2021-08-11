@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Solution.Application.Category;
 using Solution.Application.Common;
 using Solution.Application.Products;
 using Solution.Application.Roles;
@@ -37,6 +38,7 @@ namespace Solution
             services.AddIdentity<User, Role>().AddEntityFrameworkStores<SolutionDbContext>().AddDefaultTokenProviders();
 
             //Declare DI
+            services.AddTransient<ICategoryService, CategoryService>();
             services.AddTransient<IProductService, ProductService>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IStorageService, StorageService>();

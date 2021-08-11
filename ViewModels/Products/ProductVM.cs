@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Solution.ViewModels.Products
 {
@@ -13,7 +14,7 @@ namespace Solution.ViewModels.Products
         public string Description { get; set; }
 
         public string Image { get; set; }
-        public string CategoryName { get; set; }
+        public List<string> Categories { set; get; } = new List<string>();
 
         public DateTime DateCreated { get; set; }
     }
