@@ -33,6 +33,7 @@ namespace SolutionForBusiness.BackEndApi.Controllers
         }
 
         [HttpPost("refreshToken")]
+        [AllowAnonymous]
         public async Task<IActionResult> RefreshToken([FromBody] GetRefreshTokenRequest refreshToken)
         {
             var result = await _userService.GetRefreshToken(refreshToken);
