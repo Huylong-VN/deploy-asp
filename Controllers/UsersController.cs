@@ -32,7 +32,7 @@ namespace SolutionForBusiness.BackEndApi.Controllers
             _userService = userService;
         }
 
-        [HttpPost]
+        [HttpPost("refreshToken")]
         public async Task<IActionResult> RefreshToken([FromBody] GetRefreshTokenRequest refreshToken)
         {
             var result = await _userService.GetRefreshToken(refreshToken);

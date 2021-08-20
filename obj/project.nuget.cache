@@ -1,10 +1,9 @@
 {
   "version": 2,
-  "dgSpecHash": "KitwnfwEDPWhDdIpGpgkGTlWLEf9GsvNUrktT51H2YjGvO3WmfPNihMpUY99bO8kMm9fC7lmgzL6SkfDyliXjQ==",
+  "dgSpecHash": "DdiB6EnG5NEl83QqquFrMucSLLOkCyxlThL53zMEoAtCn2lrK86OhjrNBL4k8xsAJixRPHctKsT1m+qNRQeVrw==",
   "success": true,
   "projectFilePath": "E:\\deploy c#\\Solution\\Solution\\Solution.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\huylo\\.nuget\\packages\\dapper\\2.0.90\\dapper.2.0.90.nupkg.sha512",
     "C:\\Users\\huylo\\.nuget\\packages\\humanizer.core\\2.8.26\\humanizer.core.2.8.26.nupkg.sha512",
     "C:\\Users\\huylo\\.nuget\\packages\\microsoft.aspnetcore.authentication.facebook\\5.0.9\\microsoft.aspnetcore.authentication.facebook.5.0.9.nupkg.sha512",
     "C:\\Users\\huylo\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\5.0.9\\microsoft.aspnetcore.authentication.jwtbearer.5.0.9.nupkg.sha512",

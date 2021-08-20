@@ -40,10 +40,6 @@
         "net5.0": {
           "targetAlias": "net5.0",
           "dependencies": {
-            "Dapper": {
-              "target": "Package",
-              "version": "[2.0.90, )"
-            },
             "Microsoft.AspNetCore.Authentication.Facebook": {
               "target": "Package",
               "version": "[5.0.9, )"
