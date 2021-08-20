@@ -6,9 +6,7 @@ namespace Solution.ViewModels.Roles
 {
     public class RoleAssignRequest
     {
-        public Guid? userId { get; set; }
-
-        public Guid userIdRole { get; set; }
+        public Guid userId { get; set; }
 
         public List<SelectedItem> Roles { get; set; } = new List<SelectedItem>();
     }

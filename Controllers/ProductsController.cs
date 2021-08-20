@@ -2,28 +2,23 @@
 using Microsoft.AspNetCore.Mvc;
 using Solution.Application.Category;
 using Solution.Application.Products;
-using Solution.Application.Users;
+using Solution.Controllers;
 using Solution.ViewModels.Categories;
 using Solution.ViewModels.Common;
+using Solution.ViewModels.ProductImages;
 using Solution.ViewModels.Products;
-using System;
 using System.Threading.Tasks;
 
 namespace SolutionForBusiness.BackEndApi.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [Authorize]
-    public class ProductsController : ControllerBase
+    public class ProductsController : BaseController
     {
         private readonly IProductService _productService;
-        public readonly IUserService _userService;
         public readonly ICategoryService _categoryService;
 
-        public ProductsController(IProductService productService, IUserService userService, ICategoryService categoryService)
+        public ProductsController(IProductService productService, ICategoryService categoryService)
         {
             _categoryService = categoryService;
-            _userService = userService;
             _productService = productService;
         }
 
@@ -42,45 +37,54 @@ namespace SolutionForBusiness.BackEndApi.Controllers
             return Ok(product);
         }
 
-        [HttpPost("create")]
-        public async Task<IActionResult> Create([FromForm] ProductCreateRequest request)
+        [HttpPost("image")]
+        public async Task<IActionResult> AddImage([FromForm] ProductImageCreateRequest request)
         {
-            var usercheck = await _userService.checkRoleUser(request.userId);
-            if (usercheck.IsSuccessed)
-            {
-                var result = await _productService.Create(request);
-                if (result.IsSuccessed) return Ok(result);
-            }
-            return BadRequest();
+            var result = await _productService.AddImage(request);
+            if (result > 0) return Ok(result);
+            return BadRequest(result);
         }
 
-        [HttpDelete]
-        public async Task<IActionResult> Delete(Guid userId, int Id)
+        [HttpPost("create")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> Create([FromForm] ProductCreateRequest request)
         {
-            var usercheck = await _userService.checkRoleUser(userId);
-            if (usercheck.IsSuccessed)
-            {
-                var result = await _productService.Delete(Id);
-                if (result.IsSuccessed) return Ok(result);
-            }
+            if (!ModelState.IsValid) return BadRequest(ModelState.Values);
+            var result = await _productService.Create(request);
+            if (result > 0) return Ok(result);
+            return BadRequest(result);
+        }
 
-            return BadRequest();
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var result = await _productService.Delete(id);
+            if (result.IsSuccessed) return Ok(result);
+            return BadRequest(result.Message);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update([FromBody] ProductUpdateRequest request)
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> Update([FromForm] ProductUpdateRequest request)
         {
-            var usercheck = await _userService.checkRoleUser(request.userId);
-            if (usercheck.IsSuccessed)
-            {
-                var result = await _productService.Update(request);
-                if (result.IsSuccessed) return Ok(result);
-            }
-            return BadRequest();
+            var result = await _productService.Update(request);
+            if (result.IsSuccessed) return Ok(result);
+            return BadRequest(result.Message);
+        }
+
+        [HttpPost("categoryassign")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> CategoryAssign([FromBody] CategoryAssignRequest request)
+        {
+            var result = await _productService.CategoryAssign(request);
+            if (result.IsSuccessed) return Ok(result);
+            return BadRequest(result.Message);
         }
 
         [HttpGet("categoryassign/{id}")]
-        public async Task<IActionResult> CategoryAssignRequest(int id)
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetCategoryAssignRequest(int id)
         {
             var productObj = await _productService.GetById(id);
             if (productObj == null) return BadRequest("null");
@@ -98,6 +102,22 @@ namespace SolutionForBusiness.BackEndApi.Controllers
             }
 
             return Ok(categoriesAssignRequest);
+        }
+
+        [HttpDelete("ProductImage/{imageId}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> RemoveImage(int imageId)
+        {
+            var result = await _productService.RemoveImage(imageId);
+            if (result.IsSuccessed) return Ok(result);
+            return BadRequest(result.Message);
+        }
+
+        [HttpGet("ProductImage/{productId}")]
+        public async Task<IActionResult> ListImagesByProductId(int productId)
+        {
+            var result = await _productService.ListImagesByProductId(productId);
+            return Ok(result);
         }
     }
 }

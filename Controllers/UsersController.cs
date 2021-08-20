@@ -1,27 +1,43 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Solution.Application.Roles;
 using Solution.Application.Users;
+using Solution.Controllers;
 using Solution.ViewModels.Common;
 using Solution.ViewModels.Roles;
 using Solution.ViewModels.Users;
 using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace SolutionForBusiness.BackEndApi.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [Authorize]
-    public class UsersController : ControllerBase
+    public class UsersController : BaseController
     {
-        public readonly IUserService _userService;
-        public readonly IRoleService _roleService;
+        private readonly IUserService _userService;
+        private readonly IRoleService _roleService;
+        private readonly IConfiguration _configuration;
 
-        public UsersController(IUserService userService, IRoleService roleService)
+        public UsersController(IUserService userService, IRoleService roleService, IConfiguration configuration)
         {
+            _configuration = configuration;
             _roleService = roleService;
             _userService = userService;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RefreshToken([FromBody] GetRefreshTokenRequest refreshToken)
+        {
+            var result = await _userService.GetRefreshToken(refreshToken);
+            if (result != null) return Ok(result);
+            return BadRequest(result);
         }
 
         [HttpPost("authenticate")]
@@ -31,6 +47,7 @@ namespace SolutionForBusiness.BackEndApi.Controllers
             if (!ModelState.IsValid) return BadRequest(ModelState.Values);
 
             var result = await _userService.Authenticate(request);
+
             if (result.ResultObj == null) return BadRequest(result.Message);
             return Ok(result.ResultObj);
         }
@@ -53,22 +70,17 @@ namespace SolutionForBusiness.BackEndApi.Controllers
             return BadRequest(result.Message);
         }
 
-        [HttpDelete]
-        public async Task<IActionResult> Delete([FromQuery] DeleteRequest request)
+        [HttpDelete("{Id}")]
+        public async Task<IActionResult> Delete(Guid Id)
         {
-            var userCheck = await _userService.checkRoleUser(request.userId);
-            if (userCheck.IsSuccessed)
-            {
-                var delete = await _userService.Delete(request.Id);
-                return Ok(delete);
-            }
-            return BadRequest(userCheck.Message);
+            var delete = await _userService.Delete(Id);
+            if (delete.IsSuccessed) return Ok(delete);
+            return BadRequest(delete.Message);
         }
 
         [HttpPut("update")]
         public async Task<IActionResult> Update([FromBody] UpdateRequest request)
         {
-            if (!ModelState.IsValid) return BadRequest("Email phải đúng chuẩn !");
             var user = await _userService.Update(request);
             if (user.IsSuccessed) return Ok(user.ResultObj);
             return BadRequest(user.Message);
@@ -82,18 +94,21 @@ namespace SolutionForBusiness.BackEndApi.Controllers
             return BadRequest(user.Message);
         }
 
+        [HttpPut("resetpassword/{Id}")]
+        public async Task<IActionResult> ResetPassword(Guid Id, string newPassword)
+        {
+            var result = await _userService.ResetPassword(Id, newPassword);
+            if (result.IsSuccessed) return Ok(result);
+            return BadRequest(result);
+        }
+
         [HttpPost("rolesassign")]
         public async Task<IActionResult> RoleAssign([FromBody] RoleAssignRequest request)
         {
-            var userCheck = await _userService.checkRoleUser(request.userIdRole);
-            if (userCheck.IsSuccessed)
-            {
-                if (!ModelState.IsValid) return BadRequest(ModelState);
-                var result = await _userService.RoleAssign(request);
-                if (result.IsSuccessed) return Ok("Cập nhật thành Công");
-            }
-
-            return BadRequest(userCheck.Message);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var result = await _userService.RoleAssign(request);
+            if (result.IsSuccessed) return Ok("Cập nhật thành Công");
+            return BadRequest(result.Message);
         }
 
         [HttpGet("getrole/{id}")]

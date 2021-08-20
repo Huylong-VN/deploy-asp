@@ -13,6 +13,8 @@ namespace Solution.ViewModels.Users
         public string Email { get; set; }
         public string PhoneNumber { get; set; }
         public IList<string> Roles { set; get; }
-        public string Token { set; get; }
+        public string accessToken { set; get; }
+        public string refreshToken { set; get; }
+        public DateTime InvalidToken { set; get; }
     }
 }

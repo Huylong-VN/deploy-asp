@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Solution.Data.EF;
 using Solution.ViewModels.Categories;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;

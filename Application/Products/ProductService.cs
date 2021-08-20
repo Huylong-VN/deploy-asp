@@ -3,7 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Solution.Application.Common;
 using Solution.Data.EF;
 using Solution.Data.Entities;
+using Solution.ViewModels.Categories;
 using Solution.ViewModels.Common;
+using Solution.ViewModels.ProductImages;
 using Solution.ViewModels.Products;
 using System;
 using System.Collections.Generic;
@@ -33,48 +35,86 @@ namespace Solution.Application.Products
             return fileName;
         }
 
-        public async Task<ApiResult<bool>> Create(ProductCreateRequest request)
+        public async Task<int> AddImage(ProductImageCreateRequest request)
+        {
+            var productImage = new ProductImage()
+            {
+                Caption = request.Caption,
+                DateCreated = DateTime.Now,
+                IsDefault = request.isDefault,
+                ProductId = request.productId,
+                SortOrder = request.SortOrder
+            };
+            if (request.Image != null)
+            {
+                productImage.ImagePath = await SaveFile(request.Image);
+                productImage.FileSize = request.Image.Length;
+            }
+            _context.ProductImages.Add(productImage);
+            await _context.SaveChangesAsync();
+            return productImage.Id;
+        }
+
+        public async Task<int> Create(ProductCreateRequest request)
         {
             var product = new Product()
             {
                 Name = request.Name,
                 Price = request.Price,
                 Description = request.Description,
-                Image = await SaveFile(request.Image),
-                CategoryId = request.CategoryId,
-                DateCreated = DateTime.Now
+                DateCreated = DateTime.Now,
             };
-
-            await _context.Products.AddAsync(product);
+            if (request.Image != null)
+            {
+                product.ProductImages = new List<ProductImage>()
+                {
+                    new ProductImage()
+                    {
+                        DateCreated=DateTime.Now,
+                        FileSize=request.Image.Length,
+                        ImagePath=await SaveFile(request.Image),
+                        IsDefault=true,
+                        SortOrder=1
+                    }
+                };
+            }
+            _context.Products.Add(product);
             await _context.SaveChangesAsync();
-            return new ApiSuccessResult<bool>();
+            return product.Id;
         }
 
-        public async Task<ApiResult<bool>> Delete(int Id)
+        public async Task<ApiResult<int>> Delete(int productId)
         {
-            var product = await _context.Products.FindAsync(Id);
-            if (product == null) return new ApiErrorResult<bool>("Không tìm thấy sản phẩm");
-            if (_storageService.GetFileUrl(product.Image) == null) await _storageService.DeleteFileAsync(product.Image);
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null) return new ApiErrorResult<int>("Không tìm thấy sản phẩm");
+            var images = _context.ProductImages.Where(x => x.ProductId == productId);
+            foreach (var img in images)
+            {
+                await _storageService.DeleteFileAsync(img.ImagePath);
+            }
 
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
-            return new ApiSuccessResult<bool>();
+            return new ApiSuccessResult<int>();
         }
 
-        public async Task<PagedResult<ProductVM>> GetProductPaging(GetProductPagingRequest request)
+        public async Task<Pagination<ProductVM>> GetProductPaging(GetProductPagingRequest request)
         {
             var query = from p in _context.Products
-                        join c in _context.Categories on p.CategoryId equals c.Id
-                        select new { p, c };
+                        join pc in _context.ProductCategories on p.Id equals pc.productId into ppc
+                        from pc in ppc.DefaultIfEmpty()
+                        join pm in _context.ProductImages on p.Id equals pm.ProductId into ppm
+                        from pm in ppm.DefaultIfEmpty()
+                        where pm.IsDefault == true
+                        select new { p, pc, pm };
             if (!string.IsNullOrEmpty(request.Keyword))
             {
                 query = query.Where(x => x.p.Name.Contains(request.Keyword));
             }
             if (request.categoryId != null && request.categoryId != 0)
             {
-                query = query.Where(x => x.c.Id == request.categoryId);
+                query = query.Where(x => x.pc.categoryId == request.categoryId);
             }
-
 
             //Total row
             int totalRow = await query.CountAsync();
@@ -86,46 +126,129 @@ namespace Solution.Application.Products
                 Description = x.p.Description,
                 Price = x.p.Price,
                 DateCreated = x.p.DateCreated,
-                Image = x.p.Image,
+                Image = x.pm.ImagePath,
             }).OrderBy(x => x.Id).ToListAsync();
-            var pagedResult = new PagedResult<ProductVM>()
+            var pagedResult = new Pagination<ProductVM>()
             {
                 Items = data,
                 PageIndex = request.PageIndex,
                 PageSize = request.PageSize,
-                ToTalRecords = totalRow
+                TotalRecords = totalRow
             };
             return pagedResult;
         }
 
-        public async Task<ApiResult<bool>> Update(ProductUpdateRequest request)
+        public async Task<ApiResult<int>> Update(ProductUpdateRequest request)
         {
             var product = await _context.Products.FindAsync(request.ProductId);
-            if (product == null) new ApiErrorResult<bool>("Không tìm tháy sản phẩm");
+            if (product == null) new ApiErrorResult<int>("Không tìm tháy sản phẩm");
             product.Name = request.Name;
             product.Price = request.Price;
             product.Description = request.Description;
-            product.CategoryId = request.CategoryId;
+            if (request.image != null)
+            {
+                var image = await _context.ProductImages.FirstOrDefaultAsync(x => x.ProductId == product.Id && x.IsDefault == true);
+                if (image != null)
+                {
+                    await _storageService.DeleteFileAsync(image.ImagePath);
+                    image.ImagePath = await SaveFile(request.image);
+                    image.FileSize = request.image.Length;
+                }
+            }
             await _context.SaveChangesAsync();
-            return new ApiSuccessResult<bool>();
+            return new ApiSuccessResult<int>();
         }
 
-        public async Task<ProductVM> GetById(int Id)
+        public async Task<ProductVM> GetById(int productId)
         {
-            var product = await _context.Products.FindAsync(Id);
+            var product = await _context.Products.FindAsync(productId);
             if (product == null) return null;
-            var category = await _context.Categories.Where(x => x.Id == product.CategoryId).Select(x => x.Name).ToListAsync();
+            var category = await (from c in _context.Categories
+                                  join pc in _context.ProductCategories on c.Id equals pc.categoryId
+                                  select c.Name).ToListAsync();
             var productVM = new ProductVM()
             {
                 Name = product.Name,
                 Price = product.Price,
                 Description = product.Description,
                 DateCreated = product.DateCreated,
-                Image = product.Image,
                 Categories = category
             };
 
             return productVM;
+        }
+
+        public async Task<ProductImageViewModal> GetImageById(int productImageId)
+        {
+            var productImage = await _context.ProductImages.FindAsync(productImageId);
+            if (productImage == null) return null;
+            var image = new ProductImageViewModal()
+            {
+                Caption = productImage.Caption,
+                FileSize = productImage.FileSize,
+                ImagePath = productImage.ImagePath,
+                IsDefault = productImage.IsDefault,
+                DateCreated = productImage.DateCreated,
+                SortOrder = productImage.SortOrder,
+                Id = productImage.Id,
+            };
+            return image;
+        }
+
+        public async Task<ApiResult<bool>> RemoveImage(int imageId)
+        {
+            var result = await _context.ProductImages.FindAsync(imageId);
+            if (result == null) return new ApiErrorResult<bool>("Ảnh không tồn tại");
+            _context.ProductImages.Remove(result);
+            await _storageService.DeleteFileAsync(result.ImagePath);
+            await _context.SaveChangesAsync();
+            return new ApiSuccessResult<bool>();
+        }
+
+        public async Task<List<ProductImageViewModal>> ListImagesByProductId(int productId)
+        {
+            return await _context.ProductImages.Where(x => x.ProductId == productId)
+                .Select(x => new ProductImageViewModal()
+                {
+                    Id = x.Id,
+                    Caption = x.Caption,
+                    IsDefault = x.IsDefault,
+                    FileSize = x.FileSize,
+                    DateCreated = x.DateCreated,
+                    ImagePath = x.ImagePath,
+                    SortOrder = x.SortOrder
+                }).ToListAsync();
+        }
+
+        public async Task<ApiResult<bool>> CategoryAssign(CategoryAssignRequest request)
+        {
+            var productobj = await _context.Products.FindAsync(request.Id);
+            if (productobj == null) return new ApiErrorResult<bool>("Sản phẩm không tồn tại");
+
+            foreach (var category in request.Categories)
+            {
+                var productcategory = await _context.ProductCategories.
+                    FirstOrDefaultAsync(x => x.categoryId == int.Parse(category.Id) && x.productId == productobj.Id);
+                if (productcategory != null && category.Selected == true)
+                {
+                    await _context.ProductCategories.AddAsync(productcategory);
+                }
+                else if (productcategory != null && category.Selected == false)
+                {
+                    _context.ProductCategories.Remove(productcategory);
+                }
+            }
+            await _context.SaveChangesAsync();
+            return new ApiSuccessResult<bool>();
+        }
+
+        public async Task<ApiResult<bool>> DefaultImage(int imageId, bool isDefault)
+        {
+            var productImage = await _context.ProductImages.FindAsync(imageId);
+            if (productImage == null) return new ApiErrorResult<bool>("Không thể tìm thấy ảnh");
+            productImage.IsDefault = isDefault;
+            await _context.SaveChangesAsync();
+            return new ApiSuccessResult<bool>();
         }
     }
 }

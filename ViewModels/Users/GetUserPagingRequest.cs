@@ -2,7 +2,7 @@
 
 namespace Solution.ViewModels.Users
 {
-    public class GetUserPagingRequest : PagingRequestBase
+    public class GetUserPagingRequest : PaginationBase
     {
         public string Keyword { get; set; }
     }

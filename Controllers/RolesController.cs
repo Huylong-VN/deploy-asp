@@ -1,16 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Solution.Application.Roles;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Solution.Controllers;
 using System.Threading.Tasks;
 
 namespace SolutionForBusiness.BackEndApi.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class RolesController : ControllerBase
+    public class RolesController : BaseController
     {
         private readonly IRoleService _roleService;
 
@@ -20,6 +16,7 @@ namespace SolutionForBusiness.BackEndApi.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _roleService.getAll();

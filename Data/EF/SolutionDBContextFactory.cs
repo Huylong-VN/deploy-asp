@@ -11,7 +11,7 @@ namespace Solution.Data.EF
         {
             IConfigurationRoot configuration = new ConfigurationBuilder()
                  .SetBasePath(Directory.GetCurrentDirectory())
-                 .AddJsonFile("appsetting.json")
+                 .AddJsonFile("appsettings.json")
                  .Build();
             var connectionString = configuration.GetConnectionString("SolutionForBusinessDb");
             var optionsBuider = new DbContextOptionsBuilder<SolutionDbContext>();

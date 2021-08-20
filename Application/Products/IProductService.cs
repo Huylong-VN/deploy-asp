@@ -1,19 +1,32 @@
-﻿using Solution.ViewModels.Common;
+﻿using Solution.ViewModels.Categories;
+using Solution.ViewModels.Common;
+using Solution.ViewModels.ProductImages;
 using Solution.ViewModels.Products;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Solution.Application.Products
 {
     public interface IProductService
     {
-        Task<PagedResult<ProductVM>> GetProductPaging(GetProductPagingRequest request);
+        Task<Pagination<ProductVM>> GetProductPaging(GetProductPagingRequest request);
 
-        Task<ApiResult<bool>> Create(ProductCreateRequest request);
+        Task<int> AddImage(ProductImageCreateRequest request);
 
-        Task<ApiResult<bool>> Update(ProductUpdateRequest request);
+        Task<ProductImageViewModal> GetImageById(int productImageId);
 
-        Task<ApiResult<bool>> Delete(int Id);
+        Task<int> Create(ProductCreateRequest request);
+
+        Task<ApiResult<int>> Update(ProductUpdateRequest request);
+
+        Task<ApiResult<int>> Delete(int Id);
 
         Task<ProductVM> GetById(int Id);
+
+        Task<ApiResult<bool>> RemoveImage(int imageId);
+
+        Task<List<ProductImageViewModal>> ListImagesByProductId(int productId);
+
+        Task<ApiResult<bool>> CategoryAssign(CategoryAssignRequest request);
     }
 }

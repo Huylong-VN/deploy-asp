@@ -1,4 +1,5 @@
 ﻿using Solution.ViewModels.Common;
+using Solution.ViewModels.RefreshTokens;
 using Solution.ViewModels.Roles;
 using Solution.ViewModels.Users;
 using System;
@@ -12,7 +13,7 @@ namespace Solution.Application.Users
 
         Task<ApiResult<bool>> Register(RegisterRequest request);
 
-        Task<PagedResult<UserVM>> GetUserPaging(GetUserPagingRequest request);
+        Task<Pagination<UserVM>> GetUserPaging(GetUserPagingRequest request);
 
         Task<ApiResult<Guid>> Update(UpdateRequest request);
 
@@ -24,6 +25,8 @@ namespace Solution.Application.Users
 
         Task<ApiResult<UserVM>> getById(Guid Id);
 
-        Task<ApiResult<bool>> checkRoleUser(Guid userId);
+        Task<ApiResult<string>> ResetPassword(Guid Id, string newPassword);
+
+        Task<RefreshToken> GetRefreshToken(GetRefreshTokenRequest refreshToken);
     }
 }
