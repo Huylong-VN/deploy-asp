@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Solution.Application.Category;
 using Solution.Application.Common;
+using Solution.Application.Facebook;
 using Solution.Application.Products;
 using Solution.Application.Roles;
 using Solution.Application.Users;
@@ -34,6 +35,14 @@ namespace Solution
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var facebookAuthSettings = new FacebookAuthSettings();
+            Configuration.Bind(nameof(FacebookAuthSettings), facebookAuthSettings);
+            services.AddSingleton(facebookAuthSettings);
+            services.AddHttpClient();
+            services.AddSingleton<IFacebookAuthService, FacebookAuthService>();
+
+            // DB COntexxt
+
             services.AddDbContext<SolutionDbContext>(options =>
               options.UseSqlServer(Configuration.GetConnectionString("SolutionForBusinessDb")));
             services.AddIdentity<User, Role>().AddEntityFrameworkStores<SolutionDbContext>().AddDefaultTokenProviders();
@@ -45,7 +54,7 @@ namespace Solution
             services.AddTransient<IStorageService, StorageService>();
             services.AddTransient<IRoleService, RoleService>();
 
-            services.AddControllers();
+            services.AddControllersWithViews();
             services.AddCors(options =>
             {
                 options.AddPolicy(name: MyAllowSpecificOrigins,

@@ -53,6 +53,18 @@ namespace SolutionForBusiness.BackEndApi.Controllers
             return Ok(result.ResultObj);
         }
 
+        [HttpPost("authenticate/fb")]
+        [AllowAnonymous]
+        public async Task<ActionResult> LoginWithFB(string accessToken)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState.Values);
+
+            var result = await _userService.LoginWithFacebookAsync(accessToken);
+
+            if (!result.IsSuccessed) return BadRequest(result.Message);
+            return Ok(result.ResultObj);
+        }
+
         [HttpGet("paging")]
         public async Task<IActionResult> GetAllPaging([FromHeader] GetUserPagingRequest request)
         {

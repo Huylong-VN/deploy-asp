@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Solution.Application.Facebook;
 using Solution.Data.Entities;
 using Solution.ViewModels.Common;
 using Solution.ViewModels.RefreshTokens;
@@ -23,9 +24,11 @@ namespace Solution.Application.Users
         private readonly UserManager<User> _usermanage;
         private readonly SignInManager<User> _signInManager;
         private readonly IConfiguration _configuration;
+        private readonly IFacebookAuthService _facebookAuth;
 
-        public UserService(IConfiguration configuration, UserManager<User> userManager, SignInManager<User> signInManager)
+        public UserService(IFacebookAuthService facebookAuth, IConfiguration configuration, UserManager<User> userManager, SignInManager<User> signInManager)
         {
+            _facebookAuth = facebookAuth;
             _configuration = configuration;
             _usermanage = userManager;
             _signInManager = signInManager;
@@ -108,6 +111,58 @@ namespace Solution.Application.Users
                 Roles = roles,
                 InvalidToken = DateTime.Now,
                 refreshToken = user.RefreshToken
+            });
+        }
+
+        public async Task<ApiResult<UserVM>> LoginWithFacebookAsync(string accessToken)
+        {
+            var validateTokenResult = await _facebookAuth.ValidateAccessTokenAsync(accessToken);
+
+            if (validateTokenResult.Data.IsValid) return new ApiErrorResult<UserVM>("Token sai");
+
+            var userInfo = await _facebookAuth.GetUserInfoAsync(accessToken);
+            var user = await _usermanage.FindByEmailAsync(userInfo.Email);
+            var claims = new[]
+           {
+                new Claim(ClaimTypes.Email,userInfo.Email),
+                new Claim(ClaimTypes.Name,userInfo.FirstName),
+            };
+
+            if (user == null)
+            {
+                var newUser = new User()
+                {
+                    Id = Guid.NewGuid(),
+                    Email = userInfo.Email,
+                    UserName = userInfo.Email,
+                    RefreshToken = GenerateRefreshToken(),
+                    InValidRefreshToken = DateTime.Now,
+                    FirstName = userInfo.FirstName,
+                    LastName = userInfo.LastName,
+                };
+                var createResult = await _usermanage.CreateAsync(newUser);
+                if (!createResult.Succeeded) return new ApiErrorResult<UserVM>("Create Failed");
+                return new ApiSuccessResult<UserVM>(new UserVM()
+                {
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    Id = user.Id,
+                    accessToken = GenerateToken(claims),
+                    refreshToken = user.RefreshToken,
+                    InvalidToken = DateTime.Now,
+                    FirstName = userInfo.FirstName,
+                    LastName = userInfo.LastName,
+                });
+            }
+            return new ApiSuccessResult<UserVM>(new UserVM()
+            {
+                UserName = user.UserName,
+                Email = user.Email,
+                Id = user.Id,
+                accessToken = GenerateToken(claims),
+                InvalidToken = DateTime.Now,
+                FirstName = userInfo.FirstName,
+                LastName = userInfo.LastName,
             });
         }
 

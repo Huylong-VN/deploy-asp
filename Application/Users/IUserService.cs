@@ -28,5 +28,7 @@ namespace Solution.Application.Users
         Task<ApiResult<string>> ResetPassword(Guid Id, string newPassword);
 
         Task<RefreshToken> GetRefreshToken(GetRefreshTokenRequest refreshToken);
+
+        Task<ApiResult<UserVM>> LoginWithFacebookAsync(string accessToken);
     }
 }
