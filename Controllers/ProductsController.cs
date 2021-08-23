@@ -7,6 +7,7 @@ using Solution.ViewModels.Categories;
 using Solution.ViewModels.Common;
 using Solution.ViewModels.ProductImages;
 using Solution.ViewModels.Products;
+using System;
 using System.Threading.Tasks;
 
 namespace SolutionForBusiness.BackEndApi.Controllers
@@ -117,6 +118,13 @@ namespace SolutionForBusiness.BackEndApi.Controllers
         public async Task<IActionResult> ListImagesByProductId(int productId)
         {
             var result = await _productService.ListImagesByProductId(productId);
+            return Ok(result);
+        }
+
+        [HttpGet("{Id}")]
+        public async Task<IActionResult> GetDetai(int Id)
+        {
+            var result = await _productService.GetDetail(Id);
             return Ok(result);
         }
     }

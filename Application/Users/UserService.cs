@@ -50,12 +50,6 @@ namespace Solution.Application.Users
             if (user == null) return null;
             if (refreshToken.refreshToken != user.RefreshToken) return null;
             var roles = await _usermanage.GetRolesAsync(user);
-            var claims = new[]
-          {
-                new Claim(ClaimTypes.Email,user.Email),
-                new Claim(ClaimTypes.Role,string.Join(";",roles)),
-                new Claim(ClaimTypes.Name,user.UserName),
-            };
             RefreshToken refresh = new RefreshToken();
             if ((DateTime.Now.Hour - 3) <= user.InValidRefreshToken.Hour)
             {
@@ -63,12 +57,18 @@ namespace Solution.Application.Users
                 await _usermanage.UpdateAsync(user);
                 refresh.refreshToken = user.RefreshToken;
             }
-            refresh.accessToken = GenerateToken(claims);
+            refresh.accessToken = GenerateToken(user, roles);
             return refresh;
         }
 
-        private string GenerateToken(IEnumerable<Claim> claims)
+        private string GenerateToken(User user, IList<string> roles)
         {
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Email,user.Email),
+                roles!=null?new Claim(ClaimTypes.Role,string.Join(";",roles)):new Claim(ClaimTypes.Role,"Customer"),
+                new Claim(ClaimTypes.Name,user.UserName),
+            };
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Tokens:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(_configuration["Tokens:Issuer"],
@@ -85,13 +85,6 @@ namespace Solution.Application.Users
             if (!result.Succeeded) return new ApiErrorResult<UserVM>("Mật khẩu chưa Chính xác ");
 
             var roles = await _usermanage.GetRolesAsync(user);
-
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.Email,user.Email),
-                new Claim(ClaimTypes.Role,string.Join(";",roles)),
-                new Claim(ClaimTypes.Name,user.UserName),
-            };
             if ((DateTime.Now.Hour - 3) <= user.InValidRefreshToken.Hour || user.RefreshToken == null)
             {
                 user.RefreshToken = GenerateRefreshToken();
@@ -103,7 +96,7 @@ namespace Solution.Application.Users
                 Id = user.Id,
                 UserName = user.UserName,
                 FirstName = user.FirstName,
-                accessToken = GenerateToken(claims),
+                accessToken = GenerateToken(user, roles),
                 LastName = user.LastName,
                 Dob = user.Dob,
                 Email = user.Email,
@@ -122,12 +115,6 @@ namespace Solution.Application.Users
 
             var userInfo = await _facebookAuth.GetUserInfoAsync(accessToken);
             var user = await _usermanage.FindByEmailAsync(userInfo.Email);
-            var claims = new[]
-           {
-                new Claim(ClaimTypes.Email,userInfo.Email),
-                new Claim(ClaimTypes.Name,userInfo.FirstName),
-            };
-
             if (user == null)
             {
                 var newUser = new User()
@@ -144,10 +131,10 @@ namespace Solution.Application.Users
                 if (!createResult.Succeeded) return new ApiErrorResult<UserVM>("Create Failed");
                 return new ApiSuccessResult<UserVM>(new UserVM()
                 {
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    Id = user.Id,
-                    accessToken = GenerateToken(claims),
+                    UserName = newUser.UserName,
+                    Email = newUser.Email,
+                    Id = newUser.Id,
+                    accessToken = GenerateToken(newUser, null),
                     refreshToken = user.RefreshToken,
                     InvalidToken = DateTime.Now,
                     FirstName = userInfo.FirstName,
@@ -159,7 +146,8 @@ namespace Solution.Application.Users
                 UserName = user.UserName,
                 Email = user.Email,
                 Id = user.Id,
-                accessToken = GenerateToken(claims),
+                accessToken = GenerateToken(user, null),
+                refreshToken = user.RefreshToken,
                 InvalidToken = DateTime.Now,
                 FirstName = userInfo.FirstName,
                 LastName = userInfo.LastName,

@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Logging;
-using Microsoft.IdentityModel.Tokens;
 using Solution.Application.Roles;
 using Solution.Application.Users;
 using Solution.Controllers;
@@ -10,11 +8,6 @@ using Solution.ViewModels.Common;
 using Solution.ViewModels.Roles;
 using Solution.ViewModels.Users;
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SolutionForBusiness.BackEndApi.Controllers
@@ -53,7 +46,7 @@ namespace SolutionForBusiness.BackEndApi.Controllers
             return Ok(result.ResultObj);
         }
 
-        [HttpPost("authenticate/fb")]
+        [HttpPost("LoginSocialFb")]
         [AllowAnonymous]
         public async Task<ActionResult> LoginWithFB(string accessToken)
         {

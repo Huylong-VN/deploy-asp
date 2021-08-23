@@ -12,6 +12,7 @@ namespace Solution.Controllers
                                     "<body style=\"background -color:#ff7f26;text-align:center;\"> " +
                                     "<h1 style=\"color:#051a80;\">Welcome to Huy World</h1> " +
                                     "<h2 style=\"color:#fff;\">Please find the attached files.</h2> " +
+                                    "<img src='https://img-cache.coccoc.com/image2?i=4&l=56/590400495' />" +
                                     "<label style=\"color:orange;font-size:100px;border:5px dotted;border-radius:50px\">HUY</label> " +
                                     "</body> " +
                                 "</html>";
@@ -28,7 +29,6 @@ namespace Solution.Controllers
             MailMessage message = new MailMessage(new MailAddress(fromEmail, mailTitle), new MailAddress(toEmail));
             message.Subject = subject;
             message.Body = MailBody;
-
             message.IsBodyHtml = true;
 
             //Server Details

@@ -28,5 +28,7 @@ namespace Solution.Application.Products
         Task<List<ProductImageViewModal>> ListImagesByProductId(int productId);
 
         Task<ApiResult<bool>> CategoryAssign(CategoryAssignRequest request);
+
+        Task<List<ProductDetail>> GetDetail(int Id);
     }
 }

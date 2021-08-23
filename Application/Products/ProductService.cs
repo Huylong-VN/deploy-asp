@@ -250,5 +250,23 @@ namespace Solution.Application.Products
             await _context.SaveChangesAsync();
             return new ApiSuccessResult<bool>();
         }
+
+        public async Task<List<ProductDetail>> GetDetail(int Id)
+        {
+            var result = from p in _context.Products
+                         join c in _context.ProductCategories on p.Id equals c.productId
+                         join pm in _context.ProductImages on p.Id equals pm.ProductId
+                         select new { p, c, pm };
+            return await result.Select(x => new ProductDetail()
+            {
+                Id = x.p.Id,
+                DateCreated = x.p.DateCreated,
+                Description = x.p.Description,
+                CategoryName = x.c.Category.Name,
+                Image = x.pm.ImagePath,
+                Name = x.p.Name,
+                Price = x.p.Price
+            }).ToListAsync();
+        }
     }
 }
