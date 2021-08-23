@@ -121,10 +121,11 @@ namespace SolutionForBusiness.BackEndApi.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{Id}")]
+        [HttpGet("Detail/{Id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetDetai(int Id)
         {
-            var result = await _productService.GetDetail(Id);
+            var result = await _productService.GetById(Id);
             return Ok(result);
         }
     }

@@ -21,14 +21,12 @@ namespace Solution.Application.Products
 
         Task<ApiResult<int>> Delete(int Id);
 
-        Task<ProductVM> GetById(int Id);
+        Task<ProductDetail> GetById(int Id);
 
         Task<ApiResult<bool>> RemoveImage(int imageId);
 
         Task<List<ProductImageViewModal>> ListImagesByProductId(int productId);
 
         Task<ApiResult<bool>> CategoryAssign(CategoryAssignRequest request);
-
-        Task<List<ProductDetail>> GetDetail(int Id);
     }
 }

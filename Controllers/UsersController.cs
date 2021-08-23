@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Solution.Application.Roles;
 using Solution.Application.Users;
 using Solution.Controllers;
@@ -16,11 +15,9 @@ namespace SolutionForBusiness.BackEndApi.Controllers
     {
         private readonly IUserService _userService;
         private readonly IRoleService _roleService;
-        private readonly IConfiguration _configuration;
 
-        public UsersController(IUserService userService, IRoleService roleService, IConfiguration configuration)
+        public UsersController(IUserService userService, IRoleService roleService)
         {
-            _configuration = configuration;
             _roleService = roleService;
             _userService = userService;
         }
@@ -46,7 +43,7 @@ namespace SolutionForBusiness.BackEndApi.Controllers
             return Ok(result.ResultObj);
         }
 
-        [HttpPost("LoginSocialFb")]
+        [HttpPost("LoginSocialFb/{accessToken}")]
         [AllowAnonymous]
         public async Task<ActionResult> LoginWithFB(string accessToken)
         {

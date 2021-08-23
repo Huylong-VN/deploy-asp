@@ -159,23 +159,24 @@ namespace Solution.Application.Products
             return new ApiSuccessResult<int>();
         }
 
-        public async Task<ProductVM> GetById(int productId)
+        public async Task<ProductDetail> GetById(int productId)
         {
             var product = await _context.Products.FindAsync(productId);
             if (product == null) return null;
-            var category = await (from c in _context.Categories
-                                  join pc in _context.ProductCategories on c.Id equals pc.categoryId
-                                  select c.Name).ToListAsync();
-            var productVM = new ProductVM()
+            var category = await _context.ProductCategories.Where(x => x.productId.Equals(productId)).Select(x => x.Category.Name).ToListAsync();
+            var image = await _context.ProductImages.Where(x => x.ProductId == productId).Select(x => x.ImagePath).ToListAsync();
+            var productDetail = new ProductDetail()
             {
+                Id=productId,
                 Name = product.Name,
                 Price = product.Price,
                 Description = product.Description,
                 DateCreated = product.DateCreated,
-                Categories = category
+                Categories = category,
+                Image = image,
             };
 
-            return productVM;
+            return productDetail;
         }
 
         public async Task<ProductImageViewModal> GetImageById(int productImageId)
@@ -249,24 +250,6 @@ namespace Solution.Application.Products
             productImage.IsDefault = isDefault;
             await _context.SaveChangesAsync();
             return new ApiSuccessResult<bool>();
-        }
-
-        public async Task<List<ProductDetail>> GetDetail(int Id)
-        {
-            var result = from p in _context.Products
-                         join c in _context.ProductCategories on p.Id equals c.productId
-                         join pm in _context.ProductImages on p.Id equals pm.ProductId
-                         select new { p, c, pm };
-            return await result.Select(x => new ProductDetail()
-            {
-                Id = x.p.Id,
-                DateCreated = x.p.DateCreated,
-                Description = x.p.Description,
-                CategoryName = x.c.Category.Name,
-                Image = x.pm.ImagePath,
-                Name = x.p.Name,
-                Price = x.p.Price
-            }).ToListAsync();
         }
     }
 }
